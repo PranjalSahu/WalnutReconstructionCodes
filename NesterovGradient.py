@@ -30,7 +30,7 @@ class AcceleratedGradientPlugin(astra.plugin.base):
         # Ideally choose a random vector
         # To decrease the chance that our vector
         # Is orthogonal to the eigenvector
-        b_k = np.random.rand(A.shape[1])
+        b_k       = np.random.rand(A.shape[1])
         b_k1_norm = 1
 
         print('running power iteration to determine step size', flush=True)
@@ -64,9 +64,9 @@ class AcceleratedGradientPlugin(astra.plugin.base):
 
 
         self.liptschitz = self.power_iteration(self.W, 10)
-        self.nu = 1/self.liptschitz
+        self.nu         = 1/self.liptschitz
 
-        self.ATy = self.W.BP(s)
+        self.ATy      = self.W.BP(s)
         self.obj_func = None
         print('plugin initialized.', flush=True)
 
@@ -74,9 +74,9 @@ class AcceleratedGradientPlugin(astra.plugin.base):
         v = self.data_mod.get_shared(self.vid)
         s = self.data_mod.get_shared(self.sid)
         W = self.W
-        ATy = self.ATy
+        ATy    = self.ATy
         x_apgd = v
-        nu = self.nu
+        nu     = self.nu
 
         # New variables
         t_acc         = 1
@@ -92,15 +92,16 @@ class AcceleratedGradientPlugin(astra.plugin.base):
             if i%10 == 0:
                 print('iteration', str(i), '/', str(its), flush=True)
 
-            tau = (t_acc-1)/(t_acc+2)
+            tau   = (t_acc-1)/(t_acc+2)
             t_acc = t_acc + 1
 
             # Compute descent direction
             descent_direction = gradient - tau/nu * (x_apgd - x_old) + tau * (NRMx - NRMx_old);
 
             # update x
-            x_old[:]  =  x_apgd[:]
-            x_apgd -= nu * descent_direction
+            x_old[:]  = x_apgd[:]
+            x_apgd   -= nu * descent_direction
+            
             if self.min_constraint is not None or self.max_constraint is not None:
                 x_apgd.clip(min=self.min_constraint, max=self.max_constraint, out=v)
 
@@ -110,7 +111,8 @@ class AcceleratedGradientPlugin(astra.plugin.base):
             NRMx          = W.BP(Wx)
             gradient      = NRMx - ATy
             self.obj_func[i] = 0.5*np.linalg.norm(Wx - s)**2
-
+            print(i, ' Objective Function ', self.obj_func[i])
+            
             if(self.obj_func[i] > np.min(self.obj_func[0:i+1])):
                 t_acc = 1; # restart acceleration
                 print('acceleration restarted!', flush=True)
